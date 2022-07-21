@@ -28,14 +28,14 @@ To serve a different directory use the `-root` flag:
 
 `-root` Defines the directory to serve. (Defaults to the current directory).
 
-## update file demo
+# update file demo
 
-# To upload file:
+## To upload file:
 curl -X POST -d 'name=linuxize' http://127.0.0.1:8080/55.txt
 
-# To get file: return status 200 and data if md5 are different
+## To get file: return status 200 and data if md5 are different
 curl -X GET -d '591d8a89d6bb4e07bb714495d8cfc0ef' http://127.0.0.1:8080/55.txt
 
-# To del file:
+## To del file:
 curl -X DELETE http://127.0.0.1:8080/55.txt
 
