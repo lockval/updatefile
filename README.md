@@ -33,15 +33,23 @@ To serve a different directory use the `-root` flag:
 To upload file:
 - curl -X POST --data-binary @js/main.js http://127.0.0.1:8080/main.js
 
-To get file: return status 200/201 and data if md5 are different, the first get is status 201
+To get file:
+return status<200 if error.
+return status=200 if post body(md5) isn't empty.
+return status>200 if post body(md5) is different(Get counts=status-200)
+
+and data if md5 are different, the first get is status 201
 - curl -X GET -d '591d8a89d6bb4e07bb714495d8cfc0ef' http://127.0.0.1:8080/main.js
 
 To del file:
 - curl -X DELETE http://127.0.0.1:8080/main.js
 
+To make PUT counts:
+- curl -X PUT http://127.0.0.1:8080/main.js
+
 To get file info:
 - curl -X TRACE http://127.0.0.1:8080/main.js
 - - {"Md5":"","GetCount":0,"Put":false}
 - - - Md5: md5 of this file
-- - - GetCount: times of GET
-- - - Put: is PUT this file
+- - - Get: GET counts(GET post body(md5) isn't empty and different will count)
+- - - Put: PUT counts

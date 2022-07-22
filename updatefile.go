@@ -52,9 +52,9 @@ func getName(URLPath string) string {
 }
 
 type UpdateFileData struct {
-	Md5      string
-	GetCount int  //
-	Put      bool //main is done
+	Md5 string
+	Get int //GET counts
+	Put int //PUT counts
 }
 
 var (
@@ -103,7 +103,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		b, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), 199)
 			return
 		}
 		defer r.Body.Close()
@@ -114,31 +114,34 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		data, ok := name2data[name]
 		if !ok {
-			http.Error(w, "not found name("+name+") in map", http.StatusNotFound)
+			http.Error(w, "not found name("+name+") in map", 199)
 			return
 		}
 
 		md5 := strings.ToLower(string(b))
 		if md5 == data.Md5 {
-			http.Error(w, "md5 is same", http.StatusForbidden)
+			http.Error(w, "md5 is same", 199)
 			return
 		}
 
 		b, err = ioutil.ReadFile(getPath(name))
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), 199)
 			return
 		}
 
 		// w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(name))
 		// w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 
-		if data.GetCount == 1 {
-			w.WriteHeader(http.StatusCreated)
-		}
-		io.Copy(w, bytes.NewReader(b))
+		data.Get++
 
-		data.GetCount++
+		if md5 == "" {
+			w.WriteHeader(200)
+		} else {
+			w.WriteHeader(200 + data.Get)
+		}
+
+		io.Copy(w, bytes.NewReader(b))
 
 		return
 
@@ -168,7 +171,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		data.Put = true
+		data.Put++
 
 		return
 
