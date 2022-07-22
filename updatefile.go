@@ -51,14 +51,14 @@ func getName(URLPath string) string {
 	return name
 }
 
-type data struct {
+type UpdateFileData struct {
 	Md5      string
 	GetCount int  //
 	Put      bool //main is done
 }
 
 var (
-	name2data = make(map[string]*data)
+	name2data = make(map[string]*UpdateFileData)
 	nameM     sync.Mutex
 )
 
@@ -95,7 +95,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		md5 := fmt.Sprintf("%x", md5.Sum(b))
 
-		name2data[name] = &data{Md5: md5}
+		name2data[name] = &UpdateFileData{Md5: md5}
 
 		return
 
@@ -219,7 +219,7 @@ func main() {
 		}
 		md5 := fmt.Sprintf("%x", md5.Sum(b))
 		println("[" + md5 + "<=" + name + "]")
-		name2data[name] = &data{Md5: md5}
+		name2data[name] = &UpdateFileData{Md5: md5}
 
 	}
 
