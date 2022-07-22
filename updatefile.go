@@ -133,11 +133,10 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(name))
 		// w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 
-		data.Get++
-
 		if md5 == "" {
 			w.WriteHeader(200)
 		} else {
+			data.Get++
 			w.WriteHeader(200 + data.Get)
 		}
 
