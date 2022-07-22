@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/md5"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -50,9 +51,15 @@ func getName(URLPath string) string {
 	return name
 }
 
+type data struct {
+	Md5      string
+	GetCount int  //
+	Put      bool //main is done
+}
+
 var (
-	name2md5 = make(map[string]string)
-	nameM    sync.Mutex
+	name2data = make(map[string]*data)
+	nameM     sync.Mutex
 )
 
 type HttpMain struct {
@@ -87,7 +94,8 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		md5 := fmt.Sprintf("%x", md5.Sum(b))
-		name2md5[name] = md5
+
+		name2data[name] = &data{Md5: md5}
 
 		return
 
@@ -104,14 +112,14 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		nameM.Lock()
 		defer nameM.Unlock()
 
-		rammd5, ok := name2md5[name]
+		data, ok := name2data[name]
 		if !ok {
 			http.Error(w, "not found name("+name+") in map", http.StatusNotFound)
 			return
 		}
 
 		md5 := strings.ToLower(string(b))
-		if md5 == rammd5 {
+		if md5 == data.Md5 {
 			http.Error(w, "md5 is same", http.StatusForbidden)
 			return
 		}
@@ -125,7 +133,12 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(name))
 		// w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 
+		if data.GetCount == 1 {
+			w.WriteHeader(http.StatusCreated)
+		}
 		io.Copy(w, bytes.NewReader(b))
+
+		data.GetCount++
 
 		return
 
@@ -141,7 +154,40 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		delete(name2md5, name)
+		delete(name2data, name)
+
+		return
+	} else if Method == "PUT" {
+		name := getName(r.URL.Path)
+		nameM.Lock()
+		defer nameM.Unlock()
+
+		data, ok := name2data[name]
+		if !ok {
+			http.Error(w, "not found name("+name+") in map", http.StatusNotFound)
+			return
+		}
+
+		data.Put = true
+
+		return
+
+	} else if Method == "TRACE" {
+		name := getName(r.URL.Path)
+		nameM.Lock()
+		defer nameM.Unlock()
+
+		data, ok := name2data[name]
+		if !ok {
+			http.Error(w, "not found name("+name+") in map", http.StatusNotFound)
+			return
+		}
+
+		err := json.NewEncoder(w).Encode(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		return
 
@@ -173,7 +219,7 @@ func main() {
 		}
 		md5 := fmt.Sprintf("%x", md5.Sum(b))
 		println("[" + md5 + "<=" + name + "]")
-		name2md5[name] = md5
+		name2data[name] = &data{Md5: md5}
 
 	}
 
