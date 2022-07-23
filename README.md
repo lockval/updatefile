@@ -34,9 +34,9 @@ To upload file:
 - curl -X POST --data-binary @js/main.js http://127.0.0.1:8080/main.js
 
 To get file:
-return status<200 if error.
-return status=200 if post body(md5) isn't empty.
-return status>200 if post body(md5) is different(Get counts=status-200)
+return status>=300 if error.
+return status==200 if post body(md5) is empty.
+return status>=200 if post body(md5) is different(Get counts=status-200)
 
 and data if md5 are different, the first get is status 201
 - curl -X GET -d '591d8a89d6bb4e07bb714495d8cfc0ef' http://127.0.0.1:8080/main.js

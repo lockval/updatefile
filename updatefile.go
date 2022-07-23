@@ -103,7 +103,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		b, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, err.Error(), 199)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		defer r.Body.Close()
@@ -114,19 +114,19 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		data, ok := name2data[name]
 		if !ok {
-			http.Error(w, "not found name("+name+") in map", 199)
+			http.Error(w, "not found name("+name+") in map", http.StatusNotFound)
 			return
 		}
 
 		md5 := strings.ToLower(string(b))
 		if md5 == data.Md5 {
-			http.Error(w, "md5 is same", 199)
+			http.Error(w, "md5 is same", http.StatusForbidden)
 			return
 		}
 
 		b, err = ioutil.ReadFile(getPath(name))
 		if err != nil {
-			http.Error(w, err.Error(), 199)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
