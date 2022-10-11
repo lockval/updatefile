@@ -47,7 +47,8 @@ To make PUT counts:
 - curl -X PUT http://127.0.0.1:8080/main.js
 
 To get file info:
-- curl -X TRACE http://127.0.0.1:8080/main.js
+- The file will be created via body if the file doesn't exist
+- curl -X TRACE --data-binary @js/main.js http://127.0.0.1:8080/main.js
 - - {"Md5":"","Get":0,"Put":0}
 - - - Md5: md5 of this file
 - - - Get: GET counts(GET post body(md5) isn't empty and different will count)

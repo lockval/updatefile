@@ -168,17 +168,47 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 
 	} else if Method == "TRACE" {
+
+		b, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer r.Body.Close()
+
 		name := getName(r.URL.Path)
 		nameM.Lock()
 		defer nameM.Unlock()
 
 		data, ok := name2data[name]
 		if !ok {
-			http.Error(w, "not found name("+name+") in map", http.StatusNotFound)
+
+			f, err := os.OpenFile(getPath(name), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600) //0644
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer f.Close()
+
+			if _, err = f.Write(b); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			md5 := fmt.Sprintf("%x", md5.Sum(b))
+
+			name2data[name] = &UpdateFileData{Md5: md5}
+
+			err = json.NewEncoder(w).Encode(name2data[name])
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			return
 		}
 
-		err := json.NewEncoder(w).Encode(data)
+		err = json.NewEncoder(w).Encode(data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
