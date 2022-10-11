@@ -34,10 +34,11 @@ To upload file:
 - curl -X POST --data-binary @js/main.js http://127.0.0.1:8080/main.js
 
 To get file:
-return status>=300 if error.
-return status==200 if post body(md5) is empty.
-return status>=200 if post body(md5) are different(Get counts=status-200)
-- curl -X GET -d '591d8a89d6bb4e07bb714495d8cfc0ef' http://127.0.0.1:8080/main.js
+- md5 is local md5
+- return status>=300 if error.
+- return status==200 if post body(md5) is empty.
+- return status>=200 if post body(md5) are different(Get counts=status-200)
+- curl -X GET http://127.0.0.1:8080/main.js?md5=591d8a89d6bb4e07bb714495d8cfc0ef
 
 To del file:
 - curl -X DELETE http://127.0.0.1:8080/main.js

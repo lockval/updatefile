@@ -8,7 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -70,7 +69,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	Method := strings.ToUpper(r.Method)
 	if Method == "POST" {
 
-		b, err := ioutil.ReadAll(r.Body)
+		b, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -101,13 +100,6 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	} else if Method == "GET" {
 
-		b, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer r.Body.Close()
-
 		name := getName(r.URL.Path)
 		nameM.Lock()
 		defer nameM.Unlock()
@@ -118,13 +110,14 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		md5 := strings.ToLower(string(b))
-		if md5 == data.Md5 {
+		queryMd5 := r.URL.Query().Get("md5")
+		queryMd5 = strings.ToLower(queryMd5)
+		if queryMd5 == data.Md5 {
 			http.Error(w, "md5 is same", http.StatusForbidden)
 			return
 		}
 
-		b, err = ioutil.ReadFile(getPath(name))
+		b, err := os.ReadFile(getPath(name))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -133,7 +126,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(name))
 		// w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 
-		if md5 == "" {
+		if queryMd5 == "" {
 			w.WriteHeader(200)
 		} else {
 			data.Get++
@@ -208,14 +201,14 @@ func main() {
 		panic(err)
 	}
 
-	items, _ := ioutil.ReadDir(*root)
+	items, _ := os.ReadDir(*root)
 	for _, item := range items {
 		if item.IsDir() {
 			continue
 
 		}
 		name := item.Name()
-		b, err := ioutil.ReadFile(getPath(name))
+		b, err := os.ReadFile(getPath(name))
 		if err != nil {
 			panic(err)
 		}
