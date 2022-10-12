@@ -169,37 +169,19 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	} else if Method == "TRACE" {
 
-		b, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer r.Body.Close()
-
 		name := getName(r.URL.Path)
+		queryMd5 := r.URL.Query().Get("md5")
+		queryMd5 = strings.ToLower(queryMd5)
+
 		nameM.Lock()
 		defer nameM.Unlock()
 
 		data, ok := name2data[name]
-		if !ok {
+		if !ok && queryMd5 != "" {
 
-			f, err := os.OpenFile(getPath(name), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600) //0644
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			defer f.Close()
+			name2data[name] = &UpdateFileData{Md5: queryMd5}
 
-			if _, err = f.Write(b); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			md5 := fmt.Sprintf("%x", md5.Sum(b))
-
-			name2data[name] = &UpdateFileData{Md5: md5}
-
-			err = json.NewEncoder(w).Encode(name2data[name])
+			err := json.NewEncoder(w).Encode(name2data[name])
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -208,7 +190,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = json.NewEncoder(w).Encode(data)
+		err := json.NewEncoder(w).Encode(data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
