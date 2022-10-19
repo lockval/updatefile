@@ -18,6 +18,8 @@ import (
 var (
 	port = flag.String("port", "8080", "Define what TCP port to bind to")
 	root = flag.String("root", "root", "Define the root filesystem path")
+	pwd  = flag.String("pwd", "123456", "Define the root filesystem path")
+	ssl  = flag.String("ssl", "example.com", "enable http ssl. demo : '-ssl=example.com' will read file: example.com.crt,example.com.key")
 )
 
 // IsExist 判断path是否存在
@@ -65,6 +67,12 @@ type HttpMain struct {
 }
 
 func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	usrPwd := r.URL.Query().Get("pwd")
+	if usrPwd != *pwd {
+		http.Error(w, "bad pwd", http.StatusUnauthorized)
+		return
+	}
 
 	Method := strings.ToUpper(r.Method)
 	if Method == "POST" {
@@ -207,7 +215,10 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
-
+	if *ssl == "" {
+		println("please set ssl")
+		return
+	}
 	err := creatPath(*root)
 	if err != nil {
 		panic(err)
@@ -241,5 +252,5 @@ func main() {
 	mux2 := CompressHandlerLevel(CORS(CORSHeaders, CORSOrigins, CORSMethods)(fs), gzip.BestCompression)
 
 	log.Println("Starting web server at 0.0.0.0:" + *port)
-	panic(http.ListenAndServe(":"+*port, mux2))
+	panic(http.ListenAndServeTLS(":"+*port, *ssl+".crt", *ssl+".key", mux2))
 }
