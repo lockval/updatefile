@@ -29,7 +29,7 @@ func creatPath(path string) error {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return os.Mkdir(path, 0666)
+			return os.Mkdir(path, 0700)
 		}
 		return err
 	}
@@ -88,7 +88,7 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		nameM.Lock()
 		defer nameM.Unlock()
 
-		f, err := os.OpenFile(getPath(name), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0666) //0644
+		f, err := os.OpenFile(getPath(name), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600) //0644
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
