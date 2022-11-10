@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"compress/gzip"
 	"crypto/md5"
+	_ "embed"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -20,6 +23,12 @@ var (
 	root = flag.String("root", "root", "Define the root filesystem path")
 	pwd  = flag.String("pwd", "123456", "Define the root filesystem path")
 	ssl  = flag.String("ssl", "example.com", "enable http ssl. demo : '-ssl=example.com' will read file: example.com.crt,example.com.key")
+
+	//go:embed example.com.crt
+	crt []byte
+
+	//go:embed example.com.key
+	key []byte
 )
 
 // IsExist 判断path是否存在
@@ -215,13 +224,23 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
+
+	execDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := os.Chdir(execDir); err != nil {
+		log.Fatal(err)
+	}
+
 	if *ssl == "" {
 		println("please set ssl")
 		return
 	}
-	err := creatPath(*root)
+	err = creatPath(*root)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	items, _ := os.ReadDir(*root)
@@ -233,7 +252,7 @@ func main() {
 		name := item.Name()
 		b, err := os.ReadFile(getPath(name))
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		md5 := fmt.Sprintf("%x", md5.Sum(b))
 		println("[" + md5 + "<=" + name + "]")
@@ -248,9 +267,14 @@ func main() {
 
 	CORSHeaders := AllowedHeaders([]string{"Authorization", "Content-Type", "User-Agent"})
 	CORSOrigins := AllowedOrigins([]string{"*"})
-	CORSMethods := AllowedMethods([]string{"GET", "POST", "DELETE"})
+	CORSMethods := AllowedMethods([]string{"GET", "POST", "DELETE", "PUT", "TRACE"})
 	mux2 := CompressHandlerLevel(CORS(CORSHeaders, CORSOrigins, CORSMethods)(fs), gzip.BestCompression)
 
+	if *ssl == "example.com" {
+		_ = ioutil.WriteFile("example.com.crt", crt, 0600)
+		_ = ioutil.WriteFile("example.com.key", key, 0600)
+	}
+
 	log.Println("Starting web server at 0.0.0.0:" + *port)
-	panic(http.ListenAndServeTLS(":"+*port, *ssl+".crt", *ssl+".key", mux2))
+	log.Fatal(http.ListenAndServeTLS(":"+*port, *ssl+".crt", *ssl+".key", mux2))
 }
