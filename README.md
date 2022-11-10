@@ -6,7 +6,7 @@ simple https server for update files.
 
 Or you can install from source using Go:
 
-    $ go get github.com/vanishs/updatefile
+    $ go install github.com/vanishs/updatefile@latest
 
 ## Usage
 
