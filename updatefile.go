@@ -225,14 +225,18 @@ func (hm *HttpMain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	flag.Parse()
 
-	execDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	ex, err := os.Executable()
 	if err != nil {
 		log.Fatal(err)
 	}
+	execDir := filepath.Dir(ex)
 
 	if err := os.Chdir(execDir); err != nil {
 		log.Fatal(err)
 	}
+
+	pwd, _ := os.Getwd()
+	fmt.Println("current directory:", pwd)
 
 	if *ssl == "" {
 		println("please set ssl")
