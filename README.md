@@ -10,13 +10,13 @@ Or you can install from source using Go:
 
 ## Usage
 
-To serve the "./root" directory on port 8080:
+To serve the "./root" directory on https://127.0.0.1:8080:
 
     $ updatefile -ssl example.com
 
-To use a different port specify with the `-port` flag:
+To use a different addr specify with the `-addr` flag:
 
-    $ updatefile -ssl example.com -port 5000
+    $ updatefile -ssl example.com -addr 127.0.0.1:5000
 
 To serve a different directory use the `-root` flag:
 
@@ -28,7 +28,7 @@ To change pwd use the `-pwd` flag:
 
 ## Options
 
-`-port` Defines the TCP port to listen on. (Defaults to 8080).
+`-addr` Defines the addr to serve. (Defaults to 127.0.0.1:8080).
 
 `-root` Defines the directory to serve. (Defaults to root directory).
 

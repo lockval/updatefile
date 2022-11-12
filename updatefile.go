@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	port = flag.String("port", "8080", "Define what TCP port to bind to")
+	addr = flag.String("addr", "127.0.0.1:8080", "ip:port")
 	root = flag.String("root", "root", "Define the root filesystem path")
 	pwd  = flag.String("pwd", "123456", "Define the root filesystem path")
 	ssl  = flag.String("ssl", "example.com", "enable http ssl. demo : '-ssl=example.com' will read file: example.com.crt,example.com.key")
@@ -279,6 +279,6 @@ func main() {
 		_ = ioutil.WriteFile("example.com.key", key, 0600)
 	}
 
-	log.Println("Starting web server at 0.0.0.0:" + *port)
-	log.Fatal(http.ListenAndServeTLS(":"+*port, *ssl+".crt", *ssl+".key", mux2))
+	log.Println("Starting web server at https://" + *addr)
+	log.Fatal(http.ListenAndServeTLS(*addr, *ssl+".crt", *ssl+".key", mux2))
 }
