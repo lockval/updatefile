@@ -6,7 +6,7 @@ simple https server for update files.
 
 Or you can install from source using Go:
 
-    $ go install github.com/vanishs/updatefile@latest
+    $ go install github.com/lockval/updatefile@latest
 
 ## Usage
 
